@@ -43,6 +43,11 @@ function isPublicPath(pathname: string) {
   return publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
+function isRootDomain(hostname: string) {
+  const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://snapworxxpro.com").hostname.toLowerCase();
+  return hostname === appHost || hostname === `www.${appHost}`;
+}
+
 function isStaticPath(pathname: string) {
   return pathname.startsWith("/_next") || pathname === "/favicon.ico" || pathname === "/robots.txt";
 }
@@ -112,6 +117,12 @@ export async function middleware(request: NextRequest) {
   }
 
   const hostname = normalizeHost(request.headers.get("host") ?? "");
+
+  // Root domain (snapworxxpro.com) — serve marketing page, no tenant required
+  if (isRootDomain(hostname)) {
+    return NextResponse.next();
+  }
+
   const tenant = await lookupTenant(hostname);
 
   if (!tenant && !isPublicPath(pathname)) {
