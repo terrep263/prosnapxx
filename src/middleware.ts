@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import type { WlTenant } from "@/lib/types";
 
 const ADMIN_COOKIE = "swp_admin_token";
-const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 
 type CacheEntry = { tenant: WlTenant | null; expiresAt: number };
 

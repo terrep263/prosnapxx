@@ -1,5 +1,4 @@
 import { requireAdmin } from "@/lib/admin-auth";
-import { redirect } from "next/navigation";
 
 export default async function AdminPage() {
   const { admin } = await requireAdmin();
