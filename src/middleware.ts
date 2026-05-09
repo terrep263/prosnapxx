@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import type { WlTenant } from "@/lib/types";
+
+const ADMIN_COOKIE = "swp_admin_token";
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 
 type CacheEntry = { tenant: WlTenant | null; expiresAt: number };
 
 const tenantCache = new Map<string, CacheEntry>();
-const publicPaths = ["/signup", "/login", "/api/stripe-webhook", "/api/health", "/api/check-subdomain"];
+const publicPaths = ["/signup", "/login", "/api/stripe-webhook", "/api/health", "/api/check-subdomain", "/api/admin"];
 const ownerPaths = ["/tenant"];
 
 function localDevelopmentTenant(hostname: string): WlTenant | null {
@@ -117,6 +121,29 @@ export async function middleware(request: NextRequest) {
   }
 
   const hostname = normalizeHost(request.headers.get("host") ?? "");
+
+  // Admin routes — check admin cookie
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;
+    if (!adminToken) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
+      return NextResponse.redirect(loginUrl);
+    }
+    // Token presence check only in middleware — full validation in route handlers
+    return NextResponse.next();
+  }
+
+  // Admin login page — redirect to admin if already logged in
+  if (pathname === "/admin/login") {
+    const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;
+    if (adminToken) {
+      const adminUrl = request.nextUrl.clone();
+      adminUrl.pathname = "/admin";
+      return NextResponse.redirect(adminUrl);
+    }
+    return NextResponse.next();
+  }
 
   // Root domain (snapworxxpro.com) — serve marketing page, no tenant required
   if (isRootDomain(hostname)) {
