@@ -1,43 +1,55 @@
 import type { PlanDefinition, PlanKey } from "@/lib/types";
 
-export const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://wl.snapworxx.com";
+export const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://snapworxxpro.com";
 
 export const planDefinitions: PlanDefinition[] = [
   {
     key: "starter",
     name: "Starter",
-    recommendation: "Solo planners and freelancers",
-    monthlyPrice: 49,
-    yearlyPrice: 490,
+    recommendation: "Solo planners and freelancers just starting out",
+    monthlyPrice: 29,
+    yearlyPrice: 290,
     monthlyPriceIdEnv: "WL_STRIPE_PRICE_STARTER_MONTHLY",
     yearlyPriceIdEnv: "WL_STRIPE_PRICE_STARTER_YEARLY",
+    eventsLimit: 3,
+    storageLimitGb: 5,
+    features: ["3 events per month", "5 GB storage", "Your logo & colors", "Subdomain included", "SnapWorxx badge shown"]
+  },
+  {
+    key: "pro",
+    name: "Pro",
+    recommendation: "Active freelancers who need more events",
+    monthlyPrice: 49,
+    yearlyPrice: 490,
+    monthlyPriceIdEnv: "WL_STRIPE_PRICE_PRO_MONTHLY",
+    yearlyPriceIdEnv: "WL_STRIPE_PRICE_PRO_YEARLY",
     eventsLimit: 10,
     storageLimitGb: 10,
-    features: ["10 events per month", "10 GB branded gallery storage", "Custom colors and logo", "Subdomain included"]
+    features: ["10 events per month", "10 GB storage", "Your logo & colors", "Subdomain included", "SnapWorxx badge shown"]
   },
   {
     key: "studio",
     name: "Studio",
-    recommendation: "Small agencies and venue teams",
+    recommendation: "Small agencies (3–10 people)",
     monthlyPrice: 99,
     yearlyPrice: 990,
     monthlyPriceIdEnv: "WL_STRIPE_PRICE_STUDIO_MONTHLY",
     yearlyPriceIdEnv: "WL_STRIPE_PRICE_STUDIO_YEARLY",
     eventsLimit: 30,
     storageLimitGb: 50,
-    features: ["30 events per month", "50 GB branded gallery storage", "Custom domain support", "Priority event workflows"]
+    features: ["30 events per month", "50 GB storage", "Custom domain support", "No SnapWorxx badge", "Priority support"]
   },
   {
     key: "agency",
     name: "Agency",
-    recommendation: "Multi-location and corporate teams",
-    monthlyPrice: 179,
-    yearlyPrice: 1790,
+    recommendation: "Mid-size agencies (11–50 people)",
+    monthlyPrice: 199,
+    yearlyPrice: 1990,
     monthlyPriceIdEnv: "WL_STRIPE_PRICE_AGENCY_MONTHLY",
     yearlyPriceIdEnv: "WL_STRIPE_PRICE_AGENCY_YEARLY",
     eventsLimit: -1,
     storageLimitGb: 200,
-    features: ["Unlimited monthly events", "200 GB branded gallery storage", "Custom domain support", "High-volume sharing tools"]
+    features: ["Unlimited events", "200 GB storage", "Custom domain support", "No SnapWorxx badge", "Priority support"]
   }
 ];
 

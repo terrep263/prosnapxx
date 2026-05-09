@@ -7,7 +7,7 @@ import { getStripe } from "@/lib/stripe";
 import type { BillingInterval, PlanKey } from "@/lib/types";
 
 const schema = z.object({
-  plan: z.enum(["starter", "studio", "agency"]),
+  plan: z.enum(["starter", "pro", "studio", "agency"]),
   interval: z.enum(["monthly", "yearly"]),
   businessName: z.string().min(2).max(120),
   ownerEmail: z.string().email(),

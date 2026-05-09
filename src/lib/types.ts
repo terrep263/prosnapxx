@@ -1,4 +1,4 @@
-export type TenantPlan = "starter" | "studio" | "agency";
+export type TenantPlan = "starter" | "pro" | "studio" | "agency";
 export type TenantStatus = "active" | "past_due" | "canceled" | "trialing";
 
 export type WlTenant = {
@@ -49,7 +49,7 @@ export type PhotoRecord = {
   [key: string]: unknown;
 };
 
-export type PlanKey = "starter" | "studio" | "agency";
+export type PlanKey = "starter" | "pro" | "studio" | "agency";
 
 export type BillingInterval = "monthly" | "yearly";
 
