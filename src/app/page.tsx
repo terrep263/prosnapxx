@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Camera, Share2, Download, Check, X, Zap, Building2, Users } from "lucide-react";
-import { TenantButton } from "@/components/TenantButton";
 import { getTenant } from "@/lib/server-tenant";
 
 const steps = [
@@ -82,7 +81,7 @@ function FeatureCell({ value, highlight }: { value: string | boolean; highlight?
 }
 
 export default async function HomePage() {
-  const tenant = await getTenant();
+  await getTenant();
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Sora', 'Inter', sans-serif" }}>
