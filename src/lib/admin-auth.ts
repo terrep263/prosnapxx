@@ -77,7 +77,7 @@ export async function getAdminSession(): Promise<{ admin: AdminUser; sessionId: 
 
   const { data: session } = await supabase
     .from("admin_sessions")
-    .select("*, admin_users(*)")
+    .select("*")
     .eq("token_hash", tokenHash)
     .eq("active", true)
     .single();
@@ -100,10 +100,16 @@ export async function getAdminSession(): Promise<{ admin: AdminUser; sessionId: 
   // Refresh activity
   await supabase.from("admin_sessions").update({ last_activity_at: new Date().toISOString() }).eq("id", session.id);
 
-  const admin = session.admin_users as AdminUser;
+  // Fetch admin user separately
+  const { data: admin } = await supabase
+    .from("admin_users")
+    .select("id, email, name, role, active")
+    .eq("id", session.admin_user_id)
+    .single();
+
   if (!admin?.active) return null;
 
-  return { admin, sessionId: session.id };
+  return { admin: admin as AdminUser, sessionId: session.id };
 }
 
 export async function requireAdmin(): Promise<{ admin: AdminUser; sessionId: string }> {
