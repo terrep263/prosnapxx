@@ -115,4 +115,60 @@ export async function sendStorageWarningEmail(tenant: WlTenant, pct: number) {
   });
 }
 
+// ── Promo account claimed — sent immediately after claim/[token] setup ────────
+
+export async function sendPromoWelcomeEmail(params: {
+  to: string;
+  businessName: string;
+  subdomain: string;
+  dashboardUrl: string;
+  loginUrl: string;
+}) {
+  if (!resend) return;
+
+  await resend.emails.send({
+    from: fromEmail(),
+    to: params.to,
+    subject: `Your SnapWorxx Pro account is ready — ${params.businessName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:600px;margin:0 auto">
+        <div style="background:linear-gradient(135deg,#530792,#7c3aed);padding:32px;border-radius:16px 16px 0 0;text-align:center">
+          <h1 style="color:white;margin:0;font-size:24px">🎉 Your account is live!</h1>
+        </div>
+        <div style="background:#fafafa;padding:32px;border-radius:0 0 16px 16px;border:1px solid #e5e7eb;border-top:0">
+          <p>Hi there,</p>
+          <p><strong>${params.businessName}</strong> is set up and ready to go on SnapWorxx Pro.</p>
+
+          <div style="background:#f3e8ff;border:1px solid #ddd6fe;border-radius:12px;padding:20px;margin:24px 0">
+            <p style="margin:0 0 8px;font-size:13px;color:#6b7280">Your dashboard</p>
+            <a href="${params.dashboardUrl}" style="color:#530792;font-weight:bold;font-size:16px">${params.subdomain}.snapworxxpro.com</a>
+          </div>
+
+          <p><strong>What you can do right now:</strong></p>
+          <ul style="color:#374151;padding-left:20px">
+            <li>Create your first event gallery</li>
+            <li>Share your QR code with guests to collect photos</li>
+            <li>Upload your logo and set your brand colors</li>
+          </ul>
+
+          <p style="margin-top:24px">
+            <a href="${params.dashboardUrl}" style="background:linear-gradient(135deg,#530792,#7c3aed);color:white;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:bold;display:inline-block">
+              Go to your dashboard →
+            </a>
+          </p>
+
+          <p style="margin-top:24px;font-size:13px;color:#6b7280">
+            Log in anytime at <a href="${params.loginUrl}" style="color:#530792">${params.loginUrl}</a><br/>
+            using the email and password you set during setup.
+          </p>
+
+          <p style="margin-top:32px;color:#9ca3af;font-size:12px">
+            Powered by SnapWorxx Pro · <a href="https://snapworxxpro.com" style="color:#9ca3af">snapworxxpro.com</a>
+          </p>
+        </div>
+      </div>
+    `
+  });
+}
+
 export { planEmailLimit, getTenantBaseUrl };
