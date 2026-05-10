@@ -46,11 +46,12 @@ export default async function AdminPage() {
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { label: "Tenants", desc: "View and manage all tenant accounts", href: "/admin/tenants" },
+            { label: "Promo Accounts", desc: "Manage and distribute 20 promotional giveaway accounts", href: "/admin/promos" },
             { label: "Route Health", desc: "Real-time status of all platform routes", href: "/admin/health" },
             { label: "Impersonation", desc: "Log in as a tenant to debug their account", href: "/admin/tenants" },
             { label: "Audit Log", desc: "Full history of all admin actions", href: "/admin/audit" },
             { label: "System Settings", desc: "Maintenance mode and platform config", href: "/admin/settings" },
-            { label: "Admin Users", desc: "Manage admin accounts and slots", href: "/admin/users" },
+          { label: "Admin Users", desc: "Manage admin accounts and slots", href: "/admin/users" },
           ].map((item) => (
             <a
               key={item.label}

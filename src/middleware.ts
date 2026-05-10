@@ -6,7 +6,7 @@ const ADMIN_COOKIE = "swp_admin_token";
 type CacheEntry = { tenant: WlTenant | null; expiresAt: number };
 
 const tenantCache = new Map<string, CacheEntry>();
-const publicPaths = ["/signup", "/login", "/api/stripe-webhook", "/api/health", "/api/check-subdomain", "/api/admin"];
+const publicPaths = ["/signup", "/login", "/api/stripe-webhook", "/api/health", "/api/check-subdomain", "/api/admin", "/api/claim", "/claim"];
 const ownerPaths = ["/tenant"];
 
 function localDevelopmentTenant(hostname: string): WlTenant | null {
