@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 const COOKIE_NAME = "swp_admin_token";
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours max
-const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const INACTIVITY_TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 hours
 
 export type AdminUser = {
   id: string;

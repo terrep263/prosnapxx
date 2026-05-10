@@ -6,7 +6,7 @@ const ADMIN_COOKIE = "swp_admin_token";
 type CacheEntry = { tenant: WlTenant | null; expiresAt: number };
 
 const tenantCache = new Map<string, CacheEntry>();
-const publicPaths = ["/signup", "/login", "/api/stripe-webhook", "/api/health", "/api/check-subdomain", "/api/admin", "/api/claim", "/claim"];
+const publicPaths = ["/signup", "/login", "/api/stripe-webhook", "/api/health", "/api/check-subdomain", "/api/admin", "/api/claim", "/claim", "/api/owner"];
 const ownerPaths = ["/tenant"];
 
 function localDevelopmentTenant(hostname: string): WlTenant | null {
@@ -112,6 +112,10 @@ function hasSupabaseSession(request: NextRequest) {
   return request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-") && cookie.value.length > 20);
 }
 
+function hasOwnerSession(request: NextRequest) {
+  return !!request.cookies.get("swp_owner_token")?.value;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (isStaticPath(pathname)) {
@@ -154,7 +158,7 @@ export async function middleware(request: NextRequest) {
     return new NextResponse("Tenant not found", { status: 404 });
   }
 
-  if (tenant && ownerPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`)) && !hasSupabaseSession(request)) {
+  if (tenant && ownerPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`)) && !hasSupabaseSession(request) && !hasOwnerSession(request)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", pathname);
