@@ -4,8 +4,8 @@ import { getServiceRoleClient } from "@/lib/supabase";
 import { z } from "zod";
 
 export async function GET() {
-  const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminSession();
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const supabase = getServiceRoleClient();
   const { data, error } = await supabase
@@ -30,8 +30,8 @@ const updateSchema = z.object({
 });
 
 export async function PATCH(request: NextRequest) {
-  const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminSession();
+  if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = updateSchema.parse(await request.json());
   const { id, ...updates } = body;
@@ -42,6 +42,6 @@ export async function PATCH(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await auditLog(session.admin.id, "update_tenant", "wl_tenants", id, before ?? undefined, data ?? undefined);
+  await auditLog(admin.id, "update_tenant", "wl_tenants", id, before ?? undefined, data ?? undefined);
   return NextResponse.json(data);
 }

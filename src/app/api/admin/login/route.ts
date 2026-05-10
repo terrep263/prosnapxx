@@ -5,7 +5,7 @@ import { verifyPassword, createAdminSession, auditLog, COOKIE_NAME } from "@/lib
 
 const schema = z.object({
   email: z.string().email(),
-  password: z.string().min(1)
+  password: z.string().min(1),
 });
 
 export async function POST(request: NextRequest) {
@@ -19,12 +19,11 @@ export async function POST(request: NextRequest) {
   const supabase = getServiceRoleClient();
   const { data: admin } = await supabase
     .from("admin_users")
-    .select("*")
+    .select("id, email, name, role, password_hash, active")
     .eq("email", body.email.toLowerCase())
-    .eq("active", true)
     .single();
 
-  if (!admin) {
+  if (!admin || !admin.active) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
@@ -33,19 +32,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
-  const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? undefined;
-  const userAgent = request.headers.get("user-agent") ?? undefined;
-  const token = await createAdminSession(admin.id, ip, userAgent);
+  const token = await createAdminSession({
+    id: admin.id,
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+  });
 
-  await auditLog(admin.id, "admin_login", "admin_users", admin.id, undefined, undefined, { ip, userAgent });
+  await auditLog(admin.id, "admin_login");
 
-  const response = NextResponse.json({ ok: true, role: admin.role });
+  const response = NextResponse.json({ ok: true });
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24, // 24 hours
-    path: "/"
+    maxAge: 60 * 60 * 8, // 8 hours
+    path: "/",
   });
 
   return response;

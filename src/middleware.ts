@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { WlTenant } from "@/lib/types";
 
-const ADMIN_COOKIE = "swp_admin_token";
+const ADMIN_COOKIE = "swp_admin";
 
 type CacheEntry = { tenant: WlTenant | null; expiresAt: number };
 
@@ -136,14 +136,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin login page — redirect to admin if already logged in
+  // Admin login page — always allow through, login page handles redirect itself
   if (pathname === "/admin/login") {
-    const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;
-    if (adminToken) {
-      const adminUrl = request.nextUrl.clone();
-      adminUrl.pathname = "/admin";
-      return NextResponse.redirect(adminUrl);
-    }
     return NextResponse.next();
   }
 
