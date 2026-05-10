@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CheckCircle, XCircle, Flag, Mail,
+import { AlertTriangle, Flag, Mail,
   RefreshCw, ChevronLeft, ToggleLeft, ToggleRight
 } from "lucide-react";
 
