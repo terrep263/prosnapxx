@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { WlTenant } from "@/lib/types";
 import { LogoutButton } from "@/components/LogoutButton";
 
+const SHOW_BADGE_PLANS = ["starter", "pro"];
+
 export function TenantHeader({
   tenant,
   href = "/",
@@ -12,6 +14,8 @@ export function TenantHeader({
   href?: string;
   showNav?: boolean;
 }) {
+  const showBadge = tenant.is_promo || SHOW_BADGE_PLANS.includes(tenant.plan);
+
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -26,17 +30,29 @@ export function TenantHeader({
           <span className="truncate text-lg font-semibold text-gray-950">{tenant.name}</span>
         </Link>
 
-        {showNav ? (
-          <nav className="flex items-center gap-1">
-            <Link href="/tenant" className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-950">
-              Dashboard
-            </Link>
-            <Link href="/tenant/settings" className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-950">
-              Settings
-            </Link>
-            <LogoutButton />
-          </nav>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {showNav ? (
+            <nav className="flex items-center gap-1">
+              <Link href="/tenant" className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-950">
+                Dashboard
+              </Link>
+              <Link href="/tenant/settings" className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-950">
+                Settings
+              </Link>
+              <LogoutButton />
+            </nav>
+          ) : null}
+          {showBadge && (
+            <a
+              href="https://snapworxxpro.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden shrink-0 text-xs font-medium text-gray-400 hover:text-gray-600 sm:block"
+            >
+              Powered by SnapWorxx Pro
+            </a>
+          )}
+        </div>
       </div>
     </header>
   );

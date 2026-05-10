@@ -7,7 +7,7 @@ type CacheEntry = { tenant: WlTenant | null; expiresAt: number };
 
 const tenantCache = new Map<string, CacheEntry>();
 const publicPaths = ["/signup", "/login", "/api/stripe-webhook", "/api/health", "/api/check-subdomain", "/api/admin", "/api/claim", "/claim", "/api/owner"];
-const ownerPaths = ["/tenant"];
+const ownerPaths = ["/tenant", "/create", "/dashboard"];
 
 function localDevelopmentTenant(hostname: string): WlTenant | null {
   if (process.env.NODE_ENV === "production") return null;
@@ -55,7 +55,7 @@ function isStaticPath(pathname: string) {
 }
 
 function firstSubdomain(hostname: string) {
-  const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://wl.snapworxx.com").hostname.toLowerCase();
+  const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://snapworxxpro.com").hostname.toLowerCase();
   if (!hostname.endsWith(appHost)) return null;
   const prefix = hostname.slice(0, -appHost.length).replace(/\.$/, "");
   return prefix ? prefix.split(".")[0] : null;
@@ -143,13 +143,33 @@ export async function middleware(request: NextRequest) {
 
   // Root domain (snapworxxpro.com) — serve marketing page, no tenant required
   if (isRootDomain(hostname)) {
+    // Force HTTPS
+    if (request.nextUrl.protocol === "http:") {
+      const httpsUrl = request.nextUrl.clone();
+      httpsUrl.protocol = "https:";
+      return NextResponse.redirect(httpsUrl);
+    }
     return NextResponse.next();
   }
 
   const tenant = await lookupTenant(hostname);
 
+  // Force HTTPS on subdomains too
+  if (request.nextUrl.protocol === "http:") {
+    const httpsUrl = request.nextUrl.clone();
+    httpsUrl.protocol = "https:";
+    return NextResponse.redirect(httpsUrl);
+  }
+
   if (!tenant && !isPublicPath(pathname)) {
     return new NextResponse("Tenant not found", { status: 404 });
+  }
+
+  // Redirect tenant root path to /tenant
+  if (tenant && pathname === "/") {
+    const tenantUrl = request.nextUrl.clone();
+    tenantUrl.pathname = "/tenant";
+    return NextResponse.redirect(tenantUrl);
   }
 
   if (tenant && ownerPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`)) && !hasSupabaseSession(request) && !hasOwnerSession(request)) {

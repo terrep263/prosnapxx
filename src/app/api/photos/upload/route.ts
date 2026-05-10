@@ -6,6 +6,13 @@ const PHOTO_BUCKET = process.env.SUPABASE_PHOTO_BUCKET ?? "event-photos";
 
 export async function POST(request: NextRequest) {
   const tenant = await getTenant();
+
+  // Hard gate: block uploads if storage is full
+  const storageTotal = Number(tenant.storage_limit_gb) + Number((tenant as any).storage_add_on_gb ?? 0);
+  const storageUsed = Number(tenant.storage_used_gb);
+  if (storageUsed >= storageTotal) {
+    return NextResponse.json({ error: "Storage limit reached. Please upgrade your plan." }, { status: 403 });
+  }
   const form = await request.formData();
   const eventId = String(form.get("eventId") ?? "");
   const files = form.getAll("files").filter((file): file is File => file instanceof File && file.type.startsWith("image/"));

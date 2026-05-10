@@ -15,7 +15,16 @@ export async function POST() {
     await supabase.from("wl_owner_sessions").update({ active: false }).eq("token_hash", tokenHash);
   }
 
+  const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://snapworxxpro.com").hostname;
   const response = NextResponse.json({ ok: true });
+
+  // Clear cookie on both root and subdomain
+  response.cookies.set(OWNER_COOKIE, "", {
+    maxAge: 0,
+    path: "/",
+    domain: `.${appHost}`,
+  });
   response.cookies.set(OWNER_COOKIE, "", { maxAge: 0, path: "/" });
+
   return response;
 }

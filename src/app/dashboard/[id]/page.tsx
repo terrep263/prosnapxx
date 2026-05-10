@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import { DashboardClient } from "@/components/DashboardClient";
 import { TenantHeader } from "@/components/TenantHeader";
+import { requireTenantOwner } from "@/lib/auth";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getTenant, getTenantAppUrl } from "@/lib/server-tenant";
 import type { EventRecord, PhotoRecord } from "@/lib/types";
 
 export default async function EventDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const tenant = await getTenant();
+  await requireTenantOwner(tenant);
   const { id } = await params;
   const supabase = getServiceRoleClient();
 

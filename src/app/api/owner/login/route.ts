@@ -33,10 +33,10 @@ export async function POST(request: NextRequest) {
   const { email, password } = body.data;
   const supabase = getServiceRoleClient();
 
-  // Look up owner by email
+  // Look up owner by email — two separate queries to avoid PostgREST join issues
   const { data: owner } = await supabase
     .from("wl_tenant_owners")
-    .select("*, wl_tenants(*)")
+    .select("id, tenant_id, email, password_hash")
     .eq("email", email.toLowerCase())
     .single();
 
@@ -45,9 +45,20 @@ export async function POST(request: NextRequest) {
   const valid = await verifyPassword(password, owner.password_hash);
   if (!valid) return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
 
-  // Check tenant is active
-  const tenant = owner.wl_tenants;
-  if (!tenant?.active) return NextResponse.json({ error: "This account has been deactivated." }, { status: 403 });
+  // Fetch tenant separately
+  const { data: tenant } = await supabase
+    .from("wl_tenants")
+    .select("id, subdomain, custom_domain, active, plan_status")
+    .eq("id", owner.tenant_id)
+    .single();
+
+  if (!tenant) return NextResponse.json({ error: "Account not found" }, { status: 404 });
+  if (!tenant.active) return NextResponse.json({ error: "This account has been deactivated." }, { status: 403 });
+  if (tenant.plan_status === "canceled") return NextResponse.json({ error: "This subscription has been canceled." }, { status: 403 });
+
+  // Determine the tenant's base URL for redirect
+  const appHost = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://snapworxxpro.com").hostname;
+  const tenantHost = tenant.custom_domain ?? `${tenant.subdomain}.${appHost}`;
 
   // Create session token
   const token = crypto.randomBytes(32).toString("hex");
@@ -62,13 +73,14 @@ export async function POST(request: NextRequest) {
     active: true,
   });
 
-  const response = NextResponse.json({ ok: true, tenantId: tenant.id });
+  const response = NextResponse.json({ ok: true, tenantHost });
   response.cookies.set(OWNER_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
+    domain: `.${appHost}`, // Share cookie across all subdomains
   });
 
   return response;

@@ -21,7 +21,11 @@ export type WlTenant = {
   events_limit: number;
   storage_used_gb: number;
   storage_limit_gb: number;
+  emails_sent_this_month?: number;
+  emails_limit?: number;
   active: boolean;
+  is_promo?: boolean;
+  promo_claimed?: boolean;
 };
 
 export type EventRecord = {

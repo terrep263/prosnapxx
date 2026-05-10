@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getPlanByPriceId } from "@/lib/config";
-import { sendTenantWelcomeEmail } from "@/lib/email";
+import { sendTenantWelcomeEmail, planEmailLimit } from "@/lib/email";
 import { toSlug, randomSuffix } from "@/lib/slug";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getStripe } from "@/lib/stripe";
@@ -36,6 +36,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     plan_status: "active",
     events_limit: plan.eventsLimit,
     storage_limit_gb: plan.storageLimitGb,
+    emails_limit: planEmailLimit(plan.key),
     active: true
   };
 

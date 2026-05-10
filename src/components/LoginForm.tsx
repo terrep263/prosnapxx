@@ -30,7 +30,18 @@ export function LoginForm() {
       return;
     }
 
-    window.location.href = next;
+    const data = await res.json();
+
+    // If we're already on the correct subdomain, just navigate
+    const currentHost = window.location.hostname;
+    const targetHost = data.tenantHost;
+
+    if (currentHost === targetHost) {
+      window.location.href = next;
+    } else {
+      // Redirect to the correct subdomain
+      window.location.href = `https://${targetHost}${next}`;
+    }
   }
 
   return (

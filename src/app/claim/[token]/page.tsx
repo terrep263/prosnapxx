@@ -32,6 +32,10 @@ export default function ClaimPage() {
       const data = await res.json();
       setSubdomain(data.subdomain);
       setStep("success");
+      // Auto-redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        window.location.href = data.dashboardUrl;
+      }, 2000);
     } else {
       const err = await res.json();
       if (res.status === 404) setStep("invalid");

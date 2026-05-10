@@ -72,7 +72,7 @@ export function TenantSettingsForm({ tenant }: { tenant: WlTenant }) {
         <label className="grid gap-2 text-sm font-medium text-gray-700">
           Custom domain
           <input className="focus-ring rounded-md border border-gray-300 px-3 py-2" value={customDomain} onChange={(event) => setCustomDomain(event.target.value.toLowerCase().trim())} placeholder="photos.yourdomain.com" />
-          <span className="text-gray-500">Add a CNAME record for this hostname pointing to wl.snapworxx.com, then save the domain here.</span>
+          <span className="text-gray-500">Add a CNAME record for this hostname pointing to <strong>snapworxxpro.com</strong>, then save the domain here. Available on Studio and Agency plans.</span>
         </label>
         <label className="grid gap-2 text-sm font-medium text-gray-700">
           Subdomain
