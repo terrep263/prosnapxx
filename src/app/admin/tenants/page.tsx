@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  AlertTriangle, CheckCircle, XCircle, Flag, Mail,
-  RefreshCw, ChevronLeft, Eye, ToggleLeft, ToggleRight
+import { AlertTriangle, CheckCircle, XCircle, Flag, Mail,
+  RefreshCw, ChevronLeft, ToggleLeft, ToggleRight
 } from "lucide-react";
 
 type Tenant = {

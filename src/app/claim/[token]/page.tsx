@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import { Gift, CheckCircle } from "lucide-react";
 
 export default function ClaimPage() {
   const { token } = useParams<{ token: string }>();
-  const router = useRouter();
   const [step, setStep] = useState<"form" | "success" | "invalid">("form");
   const [businessName, setBusinessName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");

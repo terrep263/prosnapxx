@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin-auth";
 
 export default async function AdminPage() {
-  const { admin } = await requireAdmin();
+  const admin = await requireAdmin();
 
   return (
     <div

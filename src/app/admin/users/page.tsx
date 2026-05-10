@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Plus, ToggleLeft, ToggleRight, Shield, User } from "lucide-react";
 
@@ -17,7 +17,6 @@ type AdminUser = {
 export default function AdminUsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [creating, setCreating] = useState(false);
@@ -28,13 +27,11 @@ export default function AdminUsersPage() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  async function load() {
-    setLoading(true);
+  const load = useCallback(async () => {
     const res = await fetch("/api/admin/users");
     if (res.ok) setUsers(await res.json());
     else if (res.status === 403) router.push("/admin");
-    setLoading(false);
-  }
+  }, [router]);
 
   async function create() {
     setCreating(true);
@@ -70,7 +67,7 @@ export default function AdminUsersPage() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const adminSlots = users.filter((u) => u.role === "admin");
   const superAdmin = users.find((u) => u.role === "superadmin");
