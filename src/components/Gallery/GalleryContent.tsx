@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { GalleryItem, GalleryPermissions } from './types';
+import { GalleryItem } from './types';
 import { GalleryLayout } from './GalleryControls';
 
 const ITEMS_PER_PAGE = 50;
@@ -36,6 +36,7 @@ function ImgWithFallback({ src, fallback, alt, className }: { src: string; fallb
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
     </div>
   );
+  // eslint-disable-next-line @next/next/no-img-element
   return <img src={cur} alt={alt} className={className} loading="lazy" onError={handleError} />;
 }
 
@@ -60,8 +61,11 @@ function GalleryCard({ item, index, onClick, aspect }: { item: GalleryItem; inde
           </div>
         </>
       ) : err ? (
-        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
+        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        </div>
       ) : (
+        // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={item.alt || item.filename || 'Photo'} className={aspect === 'square' ? 'w-full h-full object-cover' : 'w-full h-auto'} loading="lazy" onError={handleErr} />
       )}
     </div>
@@ -98,7 +102,7 @@ export default function GalleryContent({ items, layout, onItemClick, loading = f
         <div className="max-w-5xl mx-auto space-y-4">
           {paged.map((item, i) => (
             <div key={item.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md cursor-pointer flex gap-4 p-4" onClick={() => onItemClick(i)}>
-              <div className="flex-shrink-0 w-32 h-32 bg-gray-100 rounded-lg overflow-hidden relative">
+              <div className="flex-shrink-0 w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
                 {item.isVideo ? (
                   <video src={item.url} className="w-full h-full object-cover" preload="metadata" muted playsInline />
                 ) : (

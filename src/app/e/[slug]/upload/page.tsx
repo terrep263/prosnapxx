@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Upload, Zap, Lock, Share2 } from 'lucide-react';
@@ -13,24 +13,24 @@ export default function UploadPage() {
   const tenant = useTenant();
   const primaryColor = tenant?.primary_color || '#9333ea';
 
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [results, setResults] = useState<Record<string, 'success' | 'error'>>({});
 
-  useEffect(() => { loadEvent(); }, [slug]);
-
-  const loadEvent = async () => {
+  const loadEvent = useCallback(async () => {
     try {
       const res = await fetch(`/api/events/by-slug/${slug}`);
       if (!res.ok) { router.push(`/e/${slug}/gallery`); return; }
-      const data = await res.json();
+      const data = await res.json() as { event: Record<string, unknown> };
       setEvent(data.event);
     } catch { router.push(`/e/${slug}/gallery`); }
     finally { setLoading(false); }
-  };
+  }, [slug, router]);
+
+  useEffect(() => { loadEvent(); }, [loadEvent]);
 
   const handleFiles = async (files: FileList) => {
     if (!files.length || !event?.id) return;
@@ -43,66 +43,63 @@ export default function UploadPage() {
       try {
         const form = new FormData();
         form.append('file', file);
-        form.append('eventId', event.id);
+        form.append('eventId', event.id as string);
         form.append('filename', file.name);
         const iv = setInterval(() => { p[key] = Math.min((p[key] || 10) + 10, 90); setProgress({ ...p }); }, 300);
         const res = await fetch('/api/upload/chunked', { method: 'POST', body: form });
         clearInterval(iv);
         p[key] = 100; setProgress({ ...p });
-        if (!res.ok) throw new Error('Failed');
-        r[key] = 'success';
+        r[key] = res.ok ? 'success' : 'error';
       } catch { r[key] = 'error'; }
       setResults({ ...r });
     }
     setUploading(false);
-    const allOk = Object.values(r).every(v => v === 'success');
-    if (allOk) setTimeout(() => router.push(`/e/${slug}/gallery`), 1500);
+    if (Object.values(r).every(v => v === 'success')) {
+      setTimeout(() => router.push(`/e/${slug}/gallery`), 1500);
+    }
   };
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: primaryColor }}></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: primaryColor }} />
     </div>
   );
 
   if (!event) return null;
 
+  const features = [
+    { icon: Upload, title: 'Easy Upload', desc: 'Drag and drop or click to select. Multiple files at once.' },
+    { icon: Zap, title: 'Instant Sharing', desc: 'Uploads appear immediately in the gallery for all guests.' },
+    { icon: Lock, title: 'Secure Storage', desc: 'Your memories are safely stored and backed up automatically.' },
+    { icon: Share2, title: 'Shareable Gallery', desc: 'All photos are accessible in a beautiful gallery.' },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <div className="border-b border-gray-200 sticky top-0 z-40 bg-white/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <Link href={`/e/${slug}/gallery`} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium text-sm">
-              <ArrowLeft size={18} /> Back to Gallery
-            </Link>
-          </div>
+          <Link href={`/e/${slug}/gallery`} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium text-sm">
+            <ArrowLeft size={18} /> Back to Gallery
+          </Link>
           <div className="text-center">
-            <h1 className="text-lg font-bold text-gray-900 line-clamp-1">{event.name}</h1>
+            <h1 className="text-lg font-bold text-gray-900 line-clamp-1">{event.name as string}</h1>
             <p className="text-xs text-gray-500">Upload Your Memories</p>
           </div>
           <div className="hidden sm:block w-32" />
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
-          {/* Left — info */}
           <div className="flex flex-col justify-center">
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
               Share Your<br /><span style={{ color: primaryColor }}>Moments</span>
             </h2>
             <p className="text-gray-600 mb-8 leading-relaxed">
-              Upload your photos and videos from <strong className="text-gray-900">{event.name}</strong>. Your memories will be instantly available in the gallery.
+              Upload your photos and videos from <strong className="text-gray-900">{event.name as string}</strong>. Your memories will be instantly available in the gallery.
             </p>
             <div className="space-y-5">
-              {[
-                { icon: Upload, title: 'Easy Upload', desc: 'Drag and drop or click to select. Multiple files at once.' },
-                { icon: Zap, title: 'Instant Sharing', desc: 'Uploads appear immediately in the gallery for all guests.' },
-                { icon: Lock, title: 'Secure Storage', desc: 'Your memories are safely stored and backed up automatically.' },
-                { icon: Share2, title: 'Shareable Gallery', desc: 'All photos are accessible in a beautiful gallery.' },
-              ].map(({ icon: Icon, title, desc }) => (
+              {features.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex gap-4">
                   <div className="flex-shrink-0 h-12 w-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primaryColor}18` }}>
                     <Icon className="h-6 w-6" style={{ color: primaryColor }} strokeWidth={1.5} />
@@ -116,7 +113,6 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {/* Right — upload */}
           <div>
             <div className="bg-gray-50 rounded-2xl border-2 border-gray-200 p-6 md:p-8">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Upload Your Files</h3>
@@ -126,14 +122,14 @@ export default function UploadPage() {
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); }}
                 onClick={() => document.getElementById('wl-upload-input')?.click()}
-                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${dragActive ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-gray-400'}`}
-                style={dragActive ? { borderColor: primaryColor, backgroundColor: `${primaryColor}08` } : {}}
+                className="border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors"
+                style={dragActive ? { borderColor: primaryColor, backgroundColor: `${primaryColor}08` } : { borderColor: '#d1d5db' }}
               >
                 <input id="wl-upload-input" type="file" multiple accept="image/*,video/*,.heic,.heif,.mov" className="hidden" onChange={e => { if (e.target.files) handleFiles(e.target.files); }} />
                 <Upload className="h-10 w-10 mx-auto mb-3 text-gray-400" strokeWidth={1.5} />
                 <p className="font-semibold text-gray-900 mb-1">{uploading ? 'Uploading...' : 'Drop photos & videos here'}</p>
                 <p className="text-sm text-gray-500 mb-3">or <span style={{ color: primaryColor }} className="font-semibold">browse files</span></p>
-                <p className="text-xs text-gray-400">JPG, PNG, MP4, MOV, HEIC • Up to 500MB per video</p>
+                <p className="text-xs text-gray-400">JPG, PNG, MP4, MOV, HEIC &bull; Up to 500MB per video</p>
               </div>
 
               {Object.keys(progress).length > 0 && (
@@ -164,7 +160,7 @@ export default function UploadPage() {
                 <ol className="text-xs text-gray-600 space-y-1.5">
                   <li><strong>1.</strong> Select photos or videos from your device</li>
                   <li><strong>2.</strong> Watch the progress as files upload securely</li>
-                  <li><strong>3.</strong> You'll be redirected to the gallery when complete</li>
+                  <li><strong>3.</strong> You&apos;ll be redirected to the gallery when complete</li>
                   <li><strong>4.</strong> Your photos are now visible to all guests!</li>
                 </ol>
               </div>

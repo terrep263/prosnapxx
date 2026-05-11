@@ -13,7 +13,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const supabase = getServiceRoleClient();
 
-    // Verify event belongs to tenant
     const { data: event } = await supabase.from('events').select('id').eq('id', eventId).eq('tenant_id', tenant.id).single();
     if (!event) return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
 
@@ -26,7 +25,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (error) throw new Error(error.message);
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || '';
 
     const transformUrl = (url: string | null | undefined) => {
@@ -38,13 +36,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return url;
     };
 
-    const transformed = (photos || []).map((p: any) => {
-      const rawUrl = p.storage_url || p.url || '';
-      const rawThumb = p.thumbnail_url || rawUrl;
+    const transformed = (photos || []).map((p: Record<string, unknown>) => {
+      const rawUrl = (p.storage_url || p.url || '') as string;
+      const rawThumb = (p.thumbnail_url || rawUrl) as string;
       return {
         id: p.id,
-        filename: p.filename || 'photo',
-        original_filename: p.filename || 'photo',
+        filename: (p.filename || 'photo') as string,
+        original_filename: (p.filename || 'photo') as string,
         storage_url: transformUrl(rawUrl),
         thumbnail_url: transformUrl(rawThumb),
         url: transformUrl(rawUrl),
@@ -54,7 +52,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         created_at: p.created_at,
         file_size: p.size || null,
         size: p.size || null,
-        mime_type: p.mime_type || p.type || 'image/jpeg',
+        mime_type: (p.mime_type || p.type || 'image/jpeg') as string,
         is_video: p.is_video || false,
         is_approved: p.is_approved,
       };
@@ -70,7 +68,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         pagination: { page, limit, totalPhotos, totalPages, hasMore: offset + transformed.length < totalPhotos },
       },
     });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message || 'Failed to load gallery' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to load gallery';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

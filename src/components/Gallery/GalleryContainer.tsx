@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { GalleryItem, GalleryPermissions } from './types';
+import { useState } from 'react';
+import { GalleryItem } from './types';
 import { EventData, getPackageType, getViewMode, getGalleryPermissions } from '@/lib/gallery-utils';
 import EventGalleryHeader from './EventGalleryHeader';
 import GalleryControls, { GalleryLayout } from './GalleryControls';
@@ -38,7 +38,7 @@ export default function GalleryContainer({ event, photos, allPhotos, loading = f
 
   const packageType = getPackageType(event);
   const viewMode = getViewMode(event, null);
-  const permissions = getGalleryPermissions(packageType, viewMode);
+  getGalleryPermissions(packageType, viewMode); // permissions available if needed
 
   const galleryItems: GalleryItem[] = photos.map(p => ({ ...p, url: p.url || p.storage_url || '', alt: p.alt || p.filename || event.name }));
   const lightboxItems: GalleryItem[] = (allPhotos || photos).map(p => ({ ...p, url: p.url || p.storage_url || '', alt: p.alt || p.filename || event.name }));
@@ -57,7 +57,7 @@ export default function GalleryContainer({ event, photos, allPhotos, loading = f
       if (!res.ok) throw new Error('Download failed');
       const ct = res.headers.get('content-type');
       if (ct?.includes('application/json')) {
-        const data = await res.json();
+        const data = await res.json() as { success: boolean; data: { url: string; filename: string } };
         if (data.success && data.data?.url) {
           const blob = await fetch(data.data.url).then(r => r.blob());
           const url = URL.createObjectURL(blob);
@@ -70,13 +70,13 @@ export default function GalleryContainer({ event, photos, allPhotos, loading = f
         const a = document.createElement('a'); a.href = url; a.download = item.filename || 'photo.jpg';
         document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
       }
-    } catch (err) { alert('Download failed. Please try again.'); }
+    } catch { alert('Download failed. Please try again.'); }
   };
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: primaryColor }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: primaryColor }} />
         <p className="text-gray-600">Loading gallery...</p>
       </div>
     </div>

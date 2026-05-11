@@ -21,8 +21,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServiceRoleClient();
 
-    // Verify event belongs to tenant
-    const { data: event } = await supabase.from('events').select('id, max_storage_bytes, max_photos').eq('id', eventId).eq('tenant_id', tenant.id).single();
+    const { data: event } = await supabase.from('events').select('id').eq('id', eventId).eq('tenant_id', tenant.id).single();
     if (!event) return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
 
     const arrayBuffer = await file.arrayBuffer();
@@ -32,10 +31,8 @@ export async function POST(request: NextRequest) {
     const sanitized = (filename || file.name).replace(/[^a-zA-Z0-9.-]/g, '_');
     const filePath = `${eventId}/${Date.now()}-${sanitized}`;
 
-    const isImage = file.type.startsWith('image/') || ['jpg','jpeg','png','gif','webp','heic','heif'].includes(fileExt);
     const isVideo = file.type.startsWith('video/') || ['mp4','mov','avi','mkv','webm','flv','wmv','3gp','hevc'].includes(fileExt);
 
-    // Determine MIME type
     const mimeMap: Record<string, string> = {
       jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif',
       webp: 'image/webp', heic: 'image/heic', heif: 'image/heif',
@@ -44,17 +41,12 @@ export async function POST(request: NextRequest) {
     };
     const fileType = file.type || mimeMap[fileExt] || 'application/octet-stream';
 
-    // Upload to storage
     const blob = new Blob([buffer], { type: fileType });
     const { error: uploadError } = await supabase.storage.from(BUCKET).upload(filePath, blob, { cacheControl: '3600', contentType: fileType, upsert: false });
     if (uploadError) throw new Error(`Storage error: ${uploadError.message}`);
 
     const publicUrl = getPublicUrl(filePath);
 
-    // Generate thumbnail path (for images, use same for now; videos use poster)
-    const thumbnailUrl = publicUrl;
-
-    // Insert photo record
     const { data: photo, error: dbError } = await supabase.from('photos').insert({
       event_id: eventId,
       filename: sanitized,
@@ -62,7 +54,7 @@ export async function POST(request: NextRequest) {
       storage_url: publicUrl,
       file_path: filePath,
       storage_path: filePath,
-      thumbnail_url: thumbnailUrl,
+      thumbnail_url: publicUrl,
       size: buffer.length,
       type: fileType,
       mime_type: fileType,
@@ -79,7 +71,8 @@ export async function POST(request: NextRequest) {
       success: true,
       data: { id: photo.id, filename: photo.filename, url: photo.url, storage_url: photo.storage_url, thumbnail_url: photo.thumbnail_url, size: photo.size, is_video: photo.is_video },
     });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message || 'Upload failed' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Upload failed';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

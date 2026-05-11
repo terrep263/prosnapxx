@@ -30,7 +30,7 @@ export default function UploadModal({ isOpen, onClose, eventId, event, onUploadC
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const arr = Array.from(incoming);
-    const valid = arr.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/') || f.name.match(/\.(jpg|jpeg|png|heic|webp|mp4|mov|hevc)$/i));
+    const valid = arr.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/') || /\.(jpg|jpeg|png|heic|webp|mp4|mov|hevc)$/i.test(f.name));
     if (!valid.length) { setError('No supported files selected.'); return; }
     setError(null);
     setFiles(prev => [...prev, ...valid.map(f => ({ id: `${Date.now()}-${Math.random()}`, file: f, status: 'queued', progress: 0 }))]);
@@ -46,14 +46,13 @@ export default function UploadModal({ isOpen, onClose, eventId, event, onUploadC
         form.append('file', f.file);
         form.append('eventId', eventId);
         form.append('filename', f.file.name);
-        // Simulate progress
         let p = 0;
         const iv = setInterval(() => { p = Math.min(p + 10, 90); setFiles(prev => prev.map(x => x.id === f.id ? { ...x, progress: p } : x)); }, 200);
         const res = await fetch('/api/upload/chunked', { method: 'POST', body: form });
         clearInterval(iv);
         if (!res.ok) throw new Error('Upload failed');
         setFiles(prev => prev.map(x => x.id === f.id ? { ...x, status: 'done', progress: 100 } : x));
-      } catch (err) {
+      } catch {
         setFiles(prev => prev.map(x => x.id === f.id ? { ...x, status: 'error', error: 'Failed' } : x));
       }
     }
@@ -85,13 +84,14 @@ export default function UploadModal({ isOpen, onClose, eventId, event, onUploadC
                 onDragLeave={e => { e.preventDefault(); setDragActive(false); }}
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => { e.preventDefault(); setDragActive(false); addFiles(e.dataTransfer.files); }}
-                className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${dragActive ? 'border-purple-600 bg-purple-50' : 'border-gray-300 hover:border-purple-400'}`}
+                className="border-2 border-dashed rounded-xl p-12 text-center transition-colors"
+                style={dragActive ? { borderColor: primaryColor, backgroundColor: `${primaryColor}08` } : { borderColor: '#d1d5db' }}
               >
                 <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                 <p className="font-semibold text-gray-900 mb-1">Drag & drop files here</p>
                 <p className="text-gray-500 text-sm mb-3">or click to browse</p>
                 <button onClick={() => fileInputRef.current?.click()} className="px-5 py-2 text-white rounded-lg font-medium" style={{ backgroundColor: primaryColor }}>Browse Files</button>
-                <p className="text-xs text-gray-400 mt-3">Photos: JPEG, PNG, HEIC, WebP • Videos: MP4, MOV (max 500MB)</p>
+                <p className="text-xs text-gray-400 mt-3">Photos: JPEG, PNG, HEIC, WebP &bull; Videos: MP4, MOV (max 500MB)</p>
               </div>
               <input ref={fileInputRef} type="file" multiple accept="image/*,video/*,.heic,.heif,.mov,.mp4" className="hidden" onChange={e => { if (e.target.files) addFiles(e.target.files); e.target.value = ''; }} />
               {files.length > 0 && (

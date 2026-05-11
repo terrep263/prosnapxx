@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { GalleryItem } from './types';
-import { EventData, getPackageType } from '@/lib/gallery-utils';
+import { EventData } from '@/lib/gallery-utils';
 
 export default function FullScreenLightbox({ items, index, open, onClose, onIndexChange, event, onDownload, isAdmin, isOwner, onModerate }: {
   items: GalleryItem[];
@@ -25,11 +25,10 @@ export default function FullScreenLightbox({ items, index, open, onClose, onInde
   const videoRef = useRef<HTMLVideoElement>(null);
   const current = items[index];
   const isVideo = current?.isVideo;
-  const primaryColor = event?.tenant_primary_color || '#9333ea';
 
   useEffect(() => {
     if (open && current) { setImageLoaded(false); }
-  }, [open, current?.id]);
+  }, [open, current]);
 
   useEffect(() => {
     if (!open) return;
@@ -40,7 +39,7 @@ export default function FullScreenLightbox({ items, index, open, onClose, onInde
     };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [open, index, items.length]);
+  }, [open, index, items.length, onClose, onIndexChange]);
 
   useEffect(() => {
     if (open) {
@@ -71,9 +70,10 @@ export default function FullScreenLightbox({ items, index, open, onClose, onInde
       if (dx > 0 && index < items.length - 1) onIndexChange(index + 1);
       else if (dx < 0 && index > 0) onIndexChange(index - 1);
     }
-  }, [index, items.length]);
+  }, [index, items.length, onIndexChange]);
 
   const handleShare = useCallback(() => {
+    if (!current) return;
     const url = event?.slug && current?.id
       ? `${window.location.origin}/e/${event.slug}/photo/${current.id}`
       : window.location.href;
@@ -96,43 +96,39 @@ export default function FullScreenLightbox({ items, index, open, onClose, onInde
       aria-modal="true"
       tabIndex={-1}
     >
-      {/* Close */}
       <button onClick={onClose} className="absolute top-4 right-4 z-50 p-2 text-white hover:text-gray-300 rounded-lg hover:bg-white/10">
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
 
-      {/* Counter */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-black/60 rounded-full px-4 py-1 text-white text-sm">{index + 1} / {items.length}</div>
 
-      {/* Prev */}
       {index > 0 && (
         <button onClick={(e) => { e.stopPropagation(); onIndexChange(index - 1); }} className="absolute left-4 top-1/2 -translate-y-1/2 z-40 p-3 text-white rounded-lg hover:bg-white/10">
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
       )}
 
-      {/* Next */}
       {index < items.length - 1 && (
         <button onClick={(e) => { e.stopPropagation(); onIndexChange(index + 1); }} className="absolute right-4 top-1/2 -translate-y-1/2 z-40 p-3 text-white rounded-lg hover:bg-white/10">
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
       )}
 
-      {/* Media */}
       <div className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
         {isVideo ? (
           <video ref={videoRef} src={current.url} controls autoPlay playsInline poster={current.thumbnail_url || undefined} className="max-w-full max-h-[95vh] rounded-lg" />
         ) : (
           <div className="relative">
             {!imageLoaded && current.thumbnail_url && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={current.thumbnail_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-50 scale-110" />
             )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={current.url} alt={current.alt || current.filename || 'Photo'} className={`max-w-full max-h-[95vh] object-contain rounded-lg transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} onLoad={() => setImageLoaded(true)} loading="eager" />
           </div>
         )}
       </div>
 
-      {/* Actions bar */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full px-4 py-2">
         {onDownload && (
           <button onClick={(e) => { e.stopPropagation(); onDownload(current, event); }} className="p-2 text-white hover:text-gray-300 rounded-lg hover:bg-white/10" title="Download">
@@ -155,7 +151,6 @@ export default function FullScreenLightbox({ items, index, open, onClose, onInde
         )}
       </div>
 
-      {/* Metadata overlay */}
       {showMeta && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-black/80 backdrop-blur-md rounded-lg px-4 py-3 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
           <p className="text-white text-sm font-semibold truncate mb-1">{current.filename || 'Photo'}</p>
