@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServiceRoleClient } from '@/lib/supabase';
 import { getTenant } from '@/lib/server-tenant';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ eventId: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { eventId } = await params;
+    const { id: eventId } = await params;
     const tenant = await getTenant();
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
